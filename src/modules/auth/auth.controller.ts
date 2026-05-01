@@ -3,54 +3,45 @@ import { login, registerUser, viewProfile } from '../auth/auth.service';
 import { StatusCodes } from 'http-status-codes';
 import { AUTH_MESSAGES } from '../../constants/messages';
 import { loginSchema } from './auth.validation';
+import { sendResponse } from '../../utils/apiResponse';
+import { catchAsync } from '../../utils/catchAsync';
 
-export const register = async function (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
-  try {
+export const register = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
     const result = await registerUser(req.body);
 
-    res.status(StatusCodes.ACCEPTED).json({
+    sendResponse(res, {
+      statusCode: StatusCodes.ACCEPTED,
       success: true,
       message: `User ${AUTH_MESSAGES.REGISTERED_SUCCESSFULLY}`,
       data: result,
     });
-  } catch (error) {
-    next(error);
-  }
-};
+  },
+);
 
-export const loginUser = async function (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
-  try {
+export const loginUser = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
     const data = loginSchema.parse(req.body);
     const result = await login(data.email, data.password);
 
-    res.status(StatusCodes.ACCEPTED).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
+    sendResponse(res, {
+      statusCode: StatusCodes.ACCEPTED,
+      success: true,
+      message: 'Logged in successfully.',
+      data: result,
+    });
+  },
+);
 
-export const viewProfileUser = async function (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
-  try {
+export const viewProfileUser = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
     const result = await viewProfile(req.user!.id);
 
-    res.status(StatusCodes.OK).json({
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
       success: true,
       message: `User profile ${AUTH_MESSAGES.GET}`,
       data: result,
     });
-  } catch (error) {
-    next(error);
-  }
-};
+  },
+);
