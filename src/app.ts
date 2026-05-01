@@ -4,8 +4,9 @@ import helmet from 'helmet';
 import { requestLogger } from './middleware/requestLogger.middleware';
 import { errorHandler } from './middleware/error.middleware';
 import swaggerUi from 'swagger-ui-express';
-import swaggerDocument from './swagger-output.json';
+import { generateSwaggerDocs } from './utils/swagger-generator';
 import authRouter from './modules/auth/auth.route';
+import { Request, Response, NextFunction } from 'express';
 
 const app = express();
 
@@ -22,7 +23,27 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/auth', authRouter);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// Dynamic In-Memory Swagger setup
+let swaggerDocument: any;
+generateSwaggerDocs().then((doc) => {
+  swaggerDocument = doc;
+});
+
+type SwaggerDoc = Record<string, unknown>;
+
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  (req: Request, res: Response, next: NextFunction) => {
+    if (!swaggerDocument) {
+      return res
+        .status(503)
+        .send('Swagger documentation is still generating...');
+    }
+    swaggerUi.setup(swaggerDocument as SwaggerDoc)(req, res, next);
+  },
+);
 
 // 404 JSON Handler
 app.use((_req, res) => {

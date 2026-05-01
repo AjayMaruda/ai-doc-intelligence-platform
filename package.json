@@ -4,12 +4,11 @@
   "description": "Production-grade backend platform for secure document ingestion, AI-powered extraction, async workflow processing, caching, and cloud-native deployment.",
   "main": "index.js",
   "scripts": {
-    "dev": "npm run swagger && ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "npm run swagger && tsc",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "swagger": "ts-node swagger.autogen.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"
   },
