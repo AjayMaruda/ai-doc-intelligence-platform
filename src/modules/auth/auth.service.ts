@@ -1,6 +1,6 @@
 import { StatusCodes } from 'http-status-codes';
 import { ApiError } from '../../utils/apiError';
-import { createUser, findUserByEmail } from './auth.repository';
+import { createUser, findUserByEmail, findUserById } from './auth.repository';
 import { RegisterUserDto } from './auth.types';
 import { AUTH_MESSAGES } from '../../constants/messages';
 import { hashPassword } from '../../utils/bycrypt';
@@ -49,4 +49,21 @@ export const login = async (email: string, password: string) => {
   const token = generateAccessToken(user.id, user.email);
 
   return { token };
+};
+
+export const viewProfile = async (userId: number) => {
+  const user = await findUserById(userId);
+
+  if (!user) {
+    throw new ApiError(
+      StatusCodes.NOT_FOUND,
+      `User ${AUTH_MESSAGES.NOT_FOUND}`,
+    );
+  }
+
+  return {
+    id: user.id,
+    email: user.email,
+    createdAt: user.createdAt,
+  };
 };

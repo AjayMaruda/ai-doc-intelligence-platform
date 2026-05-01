@@ -12,6 +12,13 @@ const doc = {
   host: 'localhost:3000',
   schemes: ['http'],
   components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+    },
     schemas: {
       RegisterSchema: {
         email: 'user@example.com',

@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { validate } from '../../middleware/validate.middleware';
 import { loginSchema, registerSchema } from './auth.validation';
-import { loginUser, register } from './auth.controller';
+import { loginUser, register, viewProfileUser } from './auth.controller';
+import { authenticate } from '../../middleware/auth.middleware';
 
 const router = Router();
 
@@ -31,6 +32,17 @@ router.post(
       #swagger.responses[200] = { description: 'Login successful' }
   */
   loginUser,
+);
+
+router.get(
+  '/viewProfile',
+  authenticate,
+  /*  #swagger.tags = ['Auth']
+      #swagger.summary = 'View user profile'
+      #swagger.security = [{ bearerAuth: [] }]
+      #swagger.responses[200] = { description: 'Profile fetched successfully' }
+  */
+  viewProfileUser,
 );
 
 export default router;

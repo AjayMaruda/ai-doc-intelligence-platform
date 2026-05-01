@@ -3,4 +3,5 @@ export const AUTH_MESSAGES = {
   VALIDATION_FAILED: 'Validation failed.',
   REGISTERED_SUCCESSFULLY: 'registered successfully.',
   NOT_FOUND: 'not found.',
+  GET: `got successfully.`,
 };
