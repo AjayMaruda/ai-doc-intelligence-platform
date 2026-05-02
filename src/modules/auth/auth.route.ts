@@ -36,12 +36,12 @@ router.post(
 
 router.get(
   '/viewProfile',
-  authenticate,
   /*  #swagger.tags = ['Auth']
       #swagger.summary = 'View user profile'
       #swagger.security = [{ bearerAuth: [] }]
       #swagger.responses[200] = { description: 'Profile fetched successfully' }
   */
+  authenticate,
   viewProfileUser,
 );
 

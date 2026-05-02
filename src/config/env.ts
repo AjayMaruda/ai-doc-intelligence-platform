@@ -15,4 +15,6 @@ export const env = {
   NODE_ENV: getEnv('NODE_ENV'),
   DATABASE_URL: getEnv('DATABASE_URL'),
   JWT_SECRET: getEnv('JWT_SECRET'),
+  REDIS_HOST: getEnv('REDIS_HOST'),
+  REDIS_PORT: getEnv('REDIS_PORT'),
 };

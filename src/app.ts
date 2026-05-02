@@ -1,58 +1,44 @@
-import express from 'express';
+import express, { Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import swaggerUi from 'swagger-ui-express';
+
 import { requestLogger } from './middleware/requestLogger.middleware';
 import { errorHandler } from './middleware/error.middleware';
-import swaggerUi from 'swagger-ui-express';
 import { generateSwaggerDocs } from './utils/swagger-generator';
-import authRouter from './modules/auth/auth.route';
-import { Request, Response, NextFunction } from 'express';
+import router from './routes';
 
-const app = express();
+export const createApp = async (): Promise<Express> => {
+  const app = express();
 
-app.use(helmet());
-app.use(cors());
-app.use(express.json());
-app.use(requestLogger);
+  app.use(helmet());
+  app.use(cors());
+  app.use(express.json());
+  app.use(requestLogger);
 
-app.get('/health', (_req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'API is runniing sucssessfully.',
+  app.get('/health', (_req, res) => {
+    res.status(200).json({
+      success: true,
+      message: 'API is running successfully.',
+    });
   });
-});
 
-app.use('/auth', authRouter);
+  app.use('/api', router);
 
-// Dynamic In-Memory Swagger setup
-let swaggerDocument: any;
-generateSwaggerDocs().then((doc) => {
-  swaggerDocument = doc;
-});
+  const swaggerDocument = await generateSwaggerDocs();
 
-type SwaggerDoc = Record<string, unknown>;
+  if (swaggerDocument) {
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  }
 
-app.use(
-  '/api-docs',
-  swaggerUi.serve,
-  (req: Request, res: Response, next: NextFunction) => {
-    if (!swaggerDocument) {
-      return res
-        .status(503)
-        .send('Swagger documentation is still generating...');
-    }
-    swaggerUi.setup(swaggerDocument as SwaggerDoc)(req, res, next);
-  },
-);
-
-// 404 JSON Handler
-app.use((_req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found',
+  app.use((_req, res) => {
+    res.status(404).json({
+      success: false,
+      message: 'Route not found',
+    });
   });
-});
 
-app.use(errorHandler);
+  app.use(errorHandler);
 
-export default app;
+  return app;
+};
