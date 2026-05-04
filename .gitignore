@@ -8,3 +8,5 @@ logs/
 .vscode/
 .DS_Store
 /src/generated/prisma
+
+/uploads*

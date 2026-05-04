@@ -23,3 +23,12 @@ export const updateDocumentStatus = async (
 export const findDocumentById = async (id: number) => {
   return prisma.document.findUnique({ where: { id } });
 };
+
+export const findDocumentByIdAndUser = async (id: number, userId: number) => {
+  return prisma.document.findFirst({
+    where: {
+      id,
+      userId,
+    },
+  });
+};

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../../middleware/auth.middleware';
 import { upload } from '../../middleware/upload.middleware';
-import { uploadDocument } from './document.controller';
+import { getStatus, uploadDocument } from './document.controller';
 
 const router = Router();
 router.post(
@@ -34,8 +34,26 @@ router.post(
         description: 'Document uploaded successfully'
       }
   */
+  authenticate,
   upload.single('document'),
   uploadDocument,
+);
+
+router.get(
+  '/:id/status',
+  /*  #swagger.tags = ['Documents']
+      #swagger.summary = 'Get document processing status'
+      #swagger.security = [{ bearerAuth: [] }]
+      #swagger.parameters['id'] = { 
+          in: 'path',
+          required: true,
+          type: 'string',
+          description: 'Document ID'
+      }
+      #swagger.responses[200] = { description: 'Document status fetched successfully' }
+  */
+  authenticate,
+  getStatus,
 );
 
 export default router;
