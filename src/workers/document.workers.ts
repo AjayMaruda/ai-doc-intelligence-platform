@@ -4,10 +4,11 @@ import {
   findDocumentById,
   updateDocumentStatus,
 } from '../modules/document/document.repository';
-import { logger } from '../config/logger';
-import { ApiError } from '../utils/apiError';
-import { StatusCodes } from 'http-status-codes';
 import { DOCUMENT_STATUS } from '../constants/document.constant';
+import { extractTextFromFile } from '../utils/file-parser';
+import { extractStructuredDocumentData } from '../services/ai-extraction.service';
+import { parseAiResponse } from '../utils/ai-json-parser';
+import { logger } from '../config/logger';
 
 export const documentWorker = new Worker(
   'document-processing',
@@ -15,26 +16,31 @@ export const documentWorker = new Worker(
     const { documentId } = job.data;
 
     try {
-      logger.info(`Started processing document job: ${documentId}`);
-
       await updateDocumentStatus(documentId, DOCUMENT_STATUS.PROCESSING);
 
       const document = await findDocumentById(documentId);
 
       if (!document) {
-        throw new ApiError(
-          StatusCodes.NOT_FOUND,
-          `Document not found for ID: ${documentId}`,
-        );
+        throw new Error(`Document not found for ID: ${documentId}`);
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      // Fake simulation delay
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      const extractedData = {
-        extractedText: `Simulated AI extraction for file ${document.fileName}`,
-        pages: 3,
-        confidence: 96,
-      };
+      logger.info(`Reading file from path: ${document.fileUrl}`);
+
+      const rawText = await extractTextFromFile(
+        document.fileUrl,
+        document.mimeType,
+      );
+
+      logger.info(`Extracted raw text length: ${rawText.length}`);
+
+      const aiResult = await extractStructuredDocumentData(rawText);
+
+      logger.info(`AI response received from Groq`);
+
+      const extractedData = parseAiResponse(aiResult);
 
       await updateDocumentStatus(
         documentId,
@@ -44,8 +50,12 @@ export const documentWorker = new Worker(
 
       logger.info(`Completed processing document job: ${documentId}`);
     } catch (error) {
-      logger.error(error, `Error processing document job ${documentId}:`);
       await updateDocumentStatus(documentId, DOCUMENT_STATUS.FAILED);
+
+      logger.error(
+        `Document processing failed for ${documentId}: ${(error as Error).message}`,
+      );
+
       throw error;
     }
   },

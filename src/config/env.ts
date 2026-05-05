@@ -17,4 +17,6 @@ export const env = {
   JWT_SECRET: getEnv('JWT_SECRET'),
   REDIS_HOST: getEnv('REDIS_HOST'),
   REDIS_PORT: getEnv('REDIS_PORT'),
+  GROQ_API_KEY: getEnv('GROQ_API_KEY'),
+  GROQ_MODEL: getEnv('GROQ_MODEL'),
 };
