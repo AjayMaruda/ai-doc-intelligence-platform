@@ -1,6 +1,6 @@
 import { StatusCodes } from 'http-status-codes';
 import { DOCUMENT_STATUS } from '../../constants/document.constant';
-import { documentQueue } from '../../queues/document.queue';
+import { addDocumentJob } from '../../queues/document.queue';
 import { ApiError } from '../../utils/apiError';
 import { createDocument, findDocumentByIdAndUser } from './document.repository';
 import { CreateDocumentDto } from './document.types';
@@ -12,9 +12,7 @@ export const uploadDocument = async (dto: CreateDocumentDto) => {
     status: DOCUMENT_STATUS.PENDING,
   });
 
-  await documentQueue.add('extract-document-data', {
-    documentId: document.id,
-  });
+  await addDocumentJob(document.id);
 
   return document;
 };

@@ -34,6 +34,9 @@ export const documentWorker = new Worker(
         document.mimeType,
       );
 
+      logger.info(
+        `Attempt number ${job.attemptsMade + 1} for document ${documentId}`,
+      );
       logger.info(`Extracted raw text length: ${rawText.length}`);
 
       const aiResult = await extractStructuredDocumentData(rawText);
@@ -50,16 +53,20 @@ export const documentWorker = new Worker(
 
       logger.info(`Completed processing document job: ${documentId}`);
     } catch (error) {
-      await updateDocumentStatus(documentId, DOCUMENT_STATUS.FAILED);
+      const isLastAttempt = job.attemptsMade + 1 >= (job.opts.attempts || 1);
 
-      logger.error(
-        `Document processing failed for ${documentId}: ${(error as Error).message}`,
-      );
-
-      throw error;
+      if (isLastAttempt) {
+        await updateDocumentStatus(
+          documentId,
+          DOCUMENT_STATUS.FAILED,
+          undefined,
+          (error as Error).message,
+        );
+      }
     }
   },
   {
     connection: redisConnection,
+    concurrency: 2,
   },
 );

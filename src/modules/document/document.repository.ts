@@ -10,12 +10,14 @@ export const updateDocumentStatus = async (
   id: number,
   status: string,
   extractedData?: Prisma.InputJsonValue,
+  failureReason?: string,
 ) => {
   return prisma.document.update({
     where: { id },
     data: {
       status,
       extractedData,
+      failureReason,
     },
   });
 };
