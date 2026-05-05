@@ -9,16 +9,18 @@ import { extractTextFromFile } from '../utils/file-parser';
 import { extractStructuredDocumentData } from '../services/ai-extraction.service';
 import { parseAiResponse } from '../utils/ai-json-parser';
 import { logger } from '../config/logger';
+import { deleteLocalFile } from '../utils/file-cleanup';
 
 export const documentWorker = new Worker(
   'document-processing',
   async (job) => {
     const { documentId } = job.data;
 
+    let document;
     try {
       await updateDocumentStatus(documentId, DOCUMENT_STATUS.PROCESSING);
 
-      const document = await findDocumentById(documentId);
+      document = await findDocumentById(documentId);
 
       if (!document) {
         throw new Error(`Document not found for ID: ${documentId}`);
@@ -51,9 +53,15 @@ export const documentWorker = new Worker(
         extractedData,
       );
 
+      await deleteLocalFile(document.fileUrl);
+
       logger.info(`Completed processing document job: ${documentId}`);
     } catch (error) {
       const isLastAttempt = job.attemptsMade + 1 >= (job.opts.attempts || 1);
+
+      if (document?.fileUrl) {
+        await deleteLocalFile(document.fileUrl);
+      }
 
       if (isLastAttempt) {
         await updateDocumentStatus(
