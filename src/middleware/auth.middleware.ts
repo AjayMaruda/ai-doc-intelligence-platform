@@ -28,6 +28,14 @@ export const authenticate = (
 
     next();
   } catch (error) {
+    if (
+      (error as Error).name === 'TokenExpiredError' ||
+      (error as Error).name === 'JsonWebTokenError'
+    ) {
+      return next(
+        new ApiError(StatusCodes.UNAUTHORIZED, (error as Error).message),
+      );
+    }
     next(error);
   }
 };

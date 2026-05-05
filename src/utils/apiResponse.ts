@@ -29,6 +29,7 @@ export const sendResponse = <T>(
 
   res.status(statusCode).json({
     success,
+    statusCode,
     message,
     data,
   });

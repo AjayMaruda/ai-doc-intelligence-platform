@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { logger } from '../config/logger';
 import { env } from '../config/env';
+import { ApiError } from '../utils/apiError';
 
 export function errorHandler(
   err: any,
@@ -8,16 +9,22 @@ export function errorHandler(
   res: Response,
   _next: NextFunction,
 ) {
+  const statusCode = err instanceof ApiError ? err.statusCode : 500;
+  const message = err.message || 'Internal Server Error';
+
   logger.error(
     {
-      message: err.message,
+      statusCode,
+      message,
       stack: err.stack,
     },
-    'Unhandled Error',
+    'API Error',
   );
-  res.status(500).json({
+
+  res.status(statusCode).json({
     success: false,
-    message: err.message || 'Internal Server Error',
-    error: env.NODE_ENV === 'development' ? err.stack : undefined,
+    statusCode,
+    message,
+    data: null,
   });
 }

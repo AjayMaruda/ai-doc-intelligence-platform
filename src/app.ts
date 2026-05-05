@@ -19,7 +19,9 @@ export const createApp = async (): Promise<Express> => {
   app.get('/health', (_req, res) => {
     res.status(200).json({
       success: true,
+      statusCode: 200,
       message: 'API is running successfully.',
+      data: null,
     });
   });
 
@@ -34,7 +36,9 @@ export const createApp = async (): Promise<Express> => {
   app.use((_req, res) => {
     res.status(404).json({
       success: false,
+      statusCode: 404,
       message: 'Route not found',
+      data: null,
     });
   });
 
