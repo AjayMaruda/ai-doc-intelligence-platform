@@ -30,7 +30,7 @@ export const uploadDocument = catchAsync(
     const result = await uploadDocumentService({
       userId: req.user!.id,
       fileName: file.originalname,
-      fileUrl: objectKey,
+      objectKey: objectKey,
       mimeType: file.mimetype,
       status: DOCUMENT_STATUS.PENDING,
     });

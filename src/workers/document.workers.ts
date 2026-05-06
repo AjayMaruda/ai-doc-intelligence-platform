@@ -30,12 +30,12 @@ export const documentWorker = new Worker(
       // Fake simulation delay
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      logger.info(`Reading file from path: ${document.fileUrl}`);
+      logger.info(`Reading file from path: ${document.objectKey}`);
 
       logger.info(`JOB STARTED for documentId: ${documentId}`);
 
-      logger.info(`Downloading file from MinIO: ${document.fileUrl}`);
-      const fileBuffer = await downloadFileFromStorage(document.fileUrl);
+      logger.info(`Downloading file from MinIO: ${document.objectKey}`);
+      const fileBuffer = await downloadFileFromStorage(document.objectKey);
       logger.info(`File downloaded. Size: ${fileBuffer.length}`);
 
       logger.info(`Starting text extraction`);
