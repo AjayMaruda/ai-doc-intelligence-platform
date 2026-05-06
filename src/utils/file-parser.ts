@@ -1,14 +1,11 @@
-import fs from 'fs/promises';
 import { PDFParse } from 'pdf-parse';
 import { logger } from '../config/logger';
 
-export const extractTextFromFile = async (
-  filePath: string,
+export const extractTextFromBuffer = async (
+  fileBuffer: Buffer,
   mimeType: string,
 ) => {
-  logger.info({ filePath, mimeType }, 'Starting file text extraction');
-
-  const fileBuffer = await fs.readFile(filePath);
+  logger.info({ mimeType }, 'Starting file text extraction');
 
   if (mimeType === 'application/pdf') {
     try {

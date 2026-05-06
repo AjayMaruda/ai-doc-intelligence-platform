@@ -5,7 +5,8 @@ import {
   updateDocumentStatus,
 } from '../modules/document/document.repository';
 import { DOCUMENT_STATUS } from '../constants/document.constant';
-import { extractTextFromFile } from '../utils/file-parser';
+import { extractTextFromBuffer } from '../utils/file-parser';
+import { downloadFileFromStorage } from '../services/storage.service';
 import { extractStructuredDocumentData } from '../services/ai-extraction.service';
 import { parseAiResponse } from '../utils/ai-json-parser';
 import { logger } from '../config/logger';
@@ -31,19 +32,23 @@ export const documentWorker = new Worker(
 
       logger.info(`Reading file from path: ${document.fileUrl}`);
 
-      const rawText = await extractTextFromFile(
-        document.fileUrl,
+      logger.info(`JOB STARTED for documentId: ${documentId}`);
+
+      logger.info(`Downloading file from MinIO: ${document.fileUrl}`);
+      const fileBuffer = await downloadFileFromStorage(document.fileUrl);
+      logger.info(`File downloaded. Size: ${fileBuffer.length}`);
+
+      logger.info(`Starting text extraction`);
+      const rawText = await extractTextFromBuffer(
+        fileBuffer,
         document.mimeType,
       );
+      logger.info(`Text extracted. Length: ${rawText.length}`);
 
-      logger.info(
-        `Attempt number ${job.attemptsMade + 1} for document ${documentId}`,
-      );
-      logger.info(`Extracted raw text length: ${rawText.length}`);
+      logger.info(`Calling AI service`);
 
       const aiResult = await extractStructuredDocumentData(rawText);
-
-      logger.info(`AI response received from Groq`);
+      logger.info({ aiResult }, `AI response received`);
 
       const extractedData = parseAiResponse(aiResult);
 
@@ -53,15 +58,18 @@ export const documentWorker = new Worker(
         extractedData,
       );
 
-      await deleteLocalFile(document.fileUrl);
-
       logger.info(`Completed processing document job: ${documentId}`);
     } catch (error) {
-      const isLastAttempt = job.attemptsMade + 1 >= (job.opts.attempts || 1);
+      logger.error(
+        {
+          error: (error as Error).message,
+          stack: (error as Error).stack,
+          documentId,
+        },
+        'Worker job failed',
+      );
 
-      if (document?.fileUrl) {
-        await deleteLocalFile(document.fileUrl);
-      }
+      const isLastAttempt = job.attemptsMade + 1 >= (job.opts.attempts || 1);
 
       if (isLastAttempt) {
         await updateDocumentStatus(
@@ -71,6 +79,8 @@ export const documentWorker = new Worker(
           (error as Error).message,
         );
       }
+
+      throw error;
     }
   },
   {
