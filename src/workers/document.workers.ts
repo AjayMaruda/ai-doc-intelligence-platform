@@ -10,7 +10,7 @@ import { downloadFileFromStorage } from '../services/storage.service';
 import { extractStructuredDocumentData } from '../services/ai-extraction.service';
 import { parseAiResponse } from '../utils/ai-json-parser';
 import { logger } from '../config/logger';
-import { deleteLocalFile } from '../utils/file-cleanup';
+import { prepareTextForAI } from '../utils/text-preprocessor';
 
 export const documentWorker = new Worker(
   'document-processing',
@@ -43,11 +43,15 @@ export const documentWorker = new Worker(
         fileBuffer,
         document.mimeType,
       );
+
+      const preparedText = prepareTextForAI(rawText);
+
+      logger.info(`Prepared AI text length: ${preparedText.length}`);
       logger.info(`Text extracted. Length: ${rawText.length}`);
 
       logger.info(`Calling AI service`);
 
-      const aiResult = await extractStructuredDocumentData(rawText);
+      const aiResult = await extractStructuredDocumentData(preparedText);
       logger.info({ aiResult }, `AI response received`);
 
       const extractedData = parseAiResponse(aiResult);
