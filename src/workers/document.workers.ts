@@ -81,6 +81,7 @@ export const documentWorker = new Worker(
           DOCUMENT_STATUS.FAILED,
           undefined,
           (error as Error).message,
+          document?.retryCount,
         );
       }
 

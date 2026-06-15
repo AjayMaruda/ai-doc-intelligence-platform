@@ -4,3 +4,5 @@ export enum DOCUMENT_STATUS {
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
 }
+
+export const MAX_DOCUMENT_RETRIES = 5;

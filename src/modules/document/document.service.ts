@@ -1,5 +1,8 @@
 import { StatusCodes } from 'http-status-codes';
-import { DOCUMENT_STATUS } from '../../constants/document.constant';
+import {
+  DOCUMENT_STATUS,
+  MAX_DOCUMENT_RETRIES,
+} from '../../constants/document.constant';
 import { addDocumentJob } from '../../queues/document.queue';
 import { ApiError } from '../../utils/apiError';
 import {
@@ -8,7 +11,7 @@ import {
   findDocumentByUser,
   getDocumentAnalytics,
   getRecentDocuments,
-  resetDocument,
+  resetDocumentForRetry,
 } from './document.repository';
 import { CreateDocumentDto } from './document.types';
 import { AUTH_MESSAGES } from '../../constants/messages';
@@ -48,6 +51,7 @@ export const getUserDocuments = async (
     id: doc.id,
     fileName: doc.fileName,
     status: doc.status,
+    retryCount: doc.retryCount,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   }));
@@ -103,7 +107,14 @@ export const retryFailedDocument = async (
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Document is not failed');
   }
 
-  await resetDocument(documentId);
+  if (document.retryCount >= MAX_DOCUMENT_RETRIES) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      `Maximum retry limit of ${MAX_DOCUMENT_RETRIES} reached`,
+    );
+  }
+
+  await resetDocumentForRetry(documentId);
 
   await addDocumentJob(documentId);
 

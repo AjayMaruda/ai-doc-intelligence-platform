@@ -11,6 +11,7 @@ export const updateDocumentStatus = async (
   status: string,
   extractedData?: Prisma.InputJsonValue,
   failureReason?: string,
+  retryCount?: number,
 ) => {
   return prisma.document.update({
     where: { id },
@@ -18,6 +19,7 @@ export const updateDocumentStatus = async (
       status,
       extractedData,
       failureReason,
+      retryCount,
     },
   });
 };
@@ -106,10 +108,10 @@ export const getRecentDocuments = async (userId: number, limit: number) => {
   });
 };
 
-export const resetDocument = async (docuemntId: number) => {
+export const resetDocument = async (documentId: number) => {
   return prisma.document.update({
     where: {
-      id: docuemntId,
+      id: documentId,
     },
     data: {
       status: DOCUMENT_STATUS.PENDING,
@@ -118,7 +120,7 @@ export const resetDocument = async (docuemntId: number) => {
   });
 };
 
-export const resteDocumnentForRetry = async (documentId: number) => {
+export const resetDocumentForRetry = async (documentId: number) => {
   return prisma.document.update({
     where: {
       id: documentId,
@@ -126,6 +128,9 @@ export const resteDocumnentForRetry = async (documentId: number) => {
     data: {
       status: DOCUMENT_STATUS.PENDING,
       failureReason: null,
+      retryCount: {
+        increment: 1,
+      },
     },
   });
 };
