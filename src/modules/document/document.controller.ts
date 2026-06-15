@@ -1,7 +1,11 @@
 import { Request, Response } from 'express';
 import { catchAsync } from '../../utils/catchAsync';
 import {
+  getDocumentAnalyticsService,
   getDocumentById,
+  getRecentDocumentInsights,
+  getUserDocuments,
+  retryFailedDocument,
   uploadDocument as uploadDocumentService,
 } from './document.service';
 import { sendResponse } from '../../utils/apiResponse';
@@ -64,3 +68,60 @@ export const getStatus = catchAsync(async (req: Request, res: Response) => {
     data: document,
   });
 });
+
+export const getDocuments = catchAsync(async (req: Request, res: Response) => {
+  const page = Number(req.query.page || 1);
+  const limit = Number(req.query.limit || 10);
+
+  const result = await getUserDocuments(req.user!.id, page, limit);
+
+  sendResponse(res, {
+    success: true,
+    message: `Document fetched successfully.`,
+    statusCode: StatusCodes.OK,
+    data: result,
+  });
+});
+
+export const getDocumentAnalyticsController = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await getDocumentAnalyticsService(req.user!.id);
+
+    sendResponse(res, {
+      success: true,
+      message: 'Document analytics fetched successfully',
+      statusCode: StatusCodes.OK,
+      data: result,
+    });
+  },
+);
+
+export const getRecentInsightsController = catchAsync(
+  async (req: Request, res: Response) => {
+    const limit = Number(req.query.limit || 5);
+
+    const result = await getRecentDocumentInsights(req.user!.id, limit);
+
+    sendResponse(res, {
+      success: true,
+      message: 'Recent insights fetched successfully',
+      statusCode: StatusCodes.OK,
+      data: result,
+    });
+  },
+);
+
+export const retryDocumentController = catchAsync(
+  async (req: Request, res: Response) => {
+    const documentId = Number(req.params.id);
+
+    const result = await retryFailedDocument(documentId, req.user!.id);
+
+    sendResponse(res, {
+      success: true,
+      message: 'Document retry initiated successfully',
+      statusCode: StatusCodes.OK,
+      data: result,
+    });
+  },
+);

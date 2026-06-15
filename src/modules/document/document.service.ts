@@ -2,7 +2,14 @@ import { StatusCodes } from 'http-status-codes';
 import { DOCUMENT_STATUS } from '../../constants/document.constant';
 import { addDocumentJob } from '../../queues/document.queue';
 import { ApiError } from '../../utils/apiError';
-import { createDocument, findDocumentByIdAndUser } from './document.repository';
+import {
+  createDocument,
+  findDocumentByIdAndUser,
+  findDocumentByUser,
+  getDocumentAnalytics,
+  getRecentDocuments,
+  resetDocument,
+} from './document.repository';
 import { CreateDocumentDto } from './document.types';
 import { AUTH_MESSAGES } from '../../constants/messages';
 
@@ -28,4 +35,79 @@ export const getDocumentById = async (documentId: number, userId: number) => {
   }
 
   return document;
+};
+
+export const getUserDocuments = async (
+  userId: number,
+  page: number,
+  limit: number,
+) => {
+  const { document, total } = await findDocumentByUser(userId, page, limit);
+
+  const formattedDocuments = document.map((doc) => ({
+    id: doc.id,
+    fileName: doc.fileName,
+    status: doc.status,
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
+  }));
+
+  return {
+    documents: formattedDocuments,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+};
+
+export const getDocumentAnalyticsService = async (userId: number) => {
+  const analytics = await getDocumentAnalytics(userId);
+
+  return analytics;
+};
+
+export const getRecentDocumentInsights = async (
+  userId: number,
+  limit: number,
+) => {
+  const documents = await getRecentDocuments(userId, limit);
+
+  return documents.map((doc) => ({
+    id: doc.id,
+    fileName: doc.fileName,
+    createdAt: doc.createdAt,
+
+    documentType: (doc.extractedData as any)?.documentType || null,
+
+    summary: (doc.extractedData as any)?.summary || null,
+  }));
+};
+
+export const retryFailedDocument = async (
+  documentId: number,
+  userId: number,
+) => {
+  const document = await findDocumentByIdAndUser(documentId, userId);
+
+  if (!document) {
+    throw new ApiError(
+      StatusCodes.NOT_FOUND,
+      `Document ${AUTH_MESSAGES.NOT_FOUND}`,
+    );
+  }
+
+  if (document.status !== DOCUMENT_STATUS.FAILED) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Document is not failed');
+  }
+
+  await resetDocument(documentId);
+
+  await addDocumentJob(documentId);
+
+  return {
+    message: 'Document retry queued successfully',
+  };
 };

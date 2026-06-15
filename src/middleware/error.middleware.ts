@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
 import { logger } from '../config/logger';
-import { env } from '../config/env';
 import { ApiError } from '../utils/apiError';
 
 export function errorHandler(
