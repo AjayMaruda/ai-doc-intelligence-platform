@@ -32,3 +32,7 @@ export const downloadFileFromStorage = async (objectKey: string) => {
     stream.on('error', reject);
   });
 };
+
+export const deleteFileFromStorage = async (objectKey: string) => {
+  await storageClient.removeObject(env.MINIO_BUCKET, objectKey);
+};

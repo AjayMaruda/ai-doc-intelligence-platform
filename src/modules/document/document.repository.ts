@@ -2,6 +2,12 @@ import { prisma } from '../../config/prisma';
 import { Prisma } from '../../generated/prisma/client';
 import { CreateDocumentDto } from './document.types';
 import { DOCUMENT_STATUS } from '../../constants/document.constant';
+import { storageClient } from '../../config/storage';
+import { env } from '../../config/env';
+import { ApiError } from '../../utils/apiError';
+import { StatusCodes } from 'http-status-codes';
+import { AUTH_MESSAGES } from '../../constants/messages';
+import { deleteFileFromStorage } from '../../services/storage.service';
 export const createDocument = async (dto: CreateDocumentDto) => {
   return prisma.document.create({ data: dto });
 };
@@ -133,4 +139,33 @@ export const resetDocumentForRetry = async (documentId: number) => {
       },
     },
   });
+};
+
+export const deleteDocument = async (documentId: number, userId: number) => {
+  const document = await findDocumentByIdAndUser(documentId, userId);
+
+  if (!document) {
+    throw new ApiError(
+      StatusCodes.NOT_FOUND,
+      `Document ${AUTH_MESSAGES.NOT_FOUND}`,
+    );
+  }
+
+  if (document.status === DOCUMENT_STATUS.PROCESSING) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      `Document can not be deleted, document is processing.`,
+    );
+  }
+  await deleteFileFromStorage(document.objectKey);
+
+  await prisma.document.delete({
+    where: {
+      id: documentId,
+    },
+  });
+
+  return {
+    deleted: true,
+  };
 };

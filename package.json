@@ -4,14 +4,12 @@
   "description": "Production-grade backend platform for secure document ingestion, AI-powered extraction, async workflow processing, caching, and cloud-native deployment.",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "...",
     "build": "tsc",
     "start": "node dist/server.js",
-    "lint": "eslint .",
-    "format": "prettier --write .",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "worker": "tsx watch src/worker.ts"
+    "worker": "tsx src/worker.ts",
+    "worker:dev": "tsx watch src/worker.ts",
+    "postinstall": "prisma generate"
   },
   "repository": {
     "type": "git",

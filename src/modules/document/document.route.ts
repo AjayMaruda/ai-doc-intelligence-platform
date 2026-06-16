@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authenticate } from '../../middleware/auth.middleware';
 import { upload } from '../../middleware/upload.middleware';
 import {
+  deleteDocumentController,
   getDocumentAnalyticsController,
   getDocuments,
   getRecentInsightsController,
@@ -101,6 +102,24 @@ router.post(
   */
   authenticate,
   retryDocumentController,
+);
+
+router.delete(
+  '/:id',
+  /*  #swagger.tags = ['Document']
+      #swagger.summary = 'Delete a document'
+      #swagger.description = 'Authenticated users can delete their own documents. Processing documents cannot be deleted.'
+      #swagger.security = [{ bearerAuth: [] }]
+      #swagger.parameters['id'] = { 
+          in: 'path',
+          required: true,
+          type: 'string',
+          description: 'Document ID'
+      }
+      #swagger.responses[200] = { description: 'Document deleted successfully' }
+  */
+  authenticate,
+  deleteDocumentController,
 );
 
 export default router;

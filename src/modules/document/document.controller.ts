@@ -12,6 +12,7 @@ import { sendResponse } from '../../utils/apiResponse';
 import { StatusCodes } from 'http-status-codes';
 import { DOCUMENT_STATUS } from '../../constants/document.constant';
 import { uploadFileToStorage } from '../../services/storage.service';
+import { deleteDocument } from './document.repository';
 
 export const uploadDocument = catchAsync(
   async (req: Request, res: Response) => {
@@ -120,6 +121,21 @@ export const retryDocumentController = catchAsync(
     sendResponse(res, {
       success: true,
       message: 'Document retry initiated successfully',
+      statusCode: StatusCodes.OK,
+      data: result,
+    });
+  },
+);
+
+export const deleteDocumentController = catchAsync(
+  async (req: Request, res: Response) => {
+    const documentId = Number(req.params.id);
+
+    const result = await deleteDocument(documentId, req.user!.id);
+
+    sendResponse(res, {
+      success: true,
+      message: 'Document deleted successfully',
       statusCode: StatusCodes.OK,
       data: result,
     });
